@@ -1,0 +1,596 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Distributions in the Field</title>
+<meta name="description" content="Ten short interactive lessons on the probability distributions behind mosquito larval surveys, insect counts and ecological data. Every chart is a live simulation.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230E6B5C'/%3E%3Cpath d='M4 25c5 0 6-17 12-17s7 17 12 17' fill='none' stroke='%23fff' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E">
+<style>
+:root {
+  --bg: #F2F5F1; --surface: #FFFFFF; --surface-2: #F6F8F5; --ink: #16252B; --ink-2: #33464E; --muted: #5A6B73;
+  --line: #D9E1DC; --grid: #E7ECE8; --axis: #9AA9AF; --accent: #0E6B5C; --accent-ink: #FFFFFF; --accent-soft: #E0EFEA;
+  --c1: #2F6FB7; --c2: #D9580F; --c3: #0E8F6E; --ref: #7A8A91; --zero: #B8C3C8;
+  --field: #E9F3F0; --field-line: #CBDAD5; --good: #0B7A5B; --bad: #B4381F; --shadow: 0 1px 2px rgba(22, 37, 43, .06), 0 8px 24px rgba(22, 37, 43, .06);
+  --serif: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
+  --sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0E1417; --surface: #161D23; --surface-2: #1B242B; --ink: #E7EEF0; --ink-2: #C5D0D5; --muted: #94A4AC;
+    --line: #2A363E; --grid: #232E35; --axis: #55656E; --accent: #56C7B0; --accent-ink: #0E1417; --accent-soft: #17302C;
+    --c1: #3C89D6; --c2: #D2692F; --c3: #1F9C76; --ref: #7F9099; --zero: #46545C;
+    --field: #15252A; --field-line: #25383F; --good: #4FCB9F; --bad: #F08A6E; --shadow: 0 1px 2px rgba(0, 0, 0, .3), 0 8px 24px rgba(0, 0, 0, .25);
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0E1417; --surface: #161D23; --surface-2: #1B242B; --ink: #E7EEF0; --ink-2: #C5D0D5; --muted: #94A4AC;
+  --line: #2A363E; --grid: #232E35; --axis: #55656E; --accent: #56C7B0; --accent-ink: #0E1417; --accent-soft: #17302C;
+  --c1: #3C89D6; --c2: #D2692F; --c3: #1F9C76; --ref: #7F9099; --zero: #46545C;
+  --field: #15252A; --field-line: #25383F; --good: #4FCB9F; --bad: #F08A6E; --shadow: 0 1px 2px rgba(0, 0, 0, .3), 0 8px 24px rgba(0, 0, 0, .25);
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; scroll-padding-top: 76px; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 17px/1.62 var(--sans); -webkit-text-size-adjust: 100%; }
+h1, h2, h3 { font-family: var(--serif); font-weight: 600; line-height: 1.18; margin: 0; letter-spacing: -.005em; }
+p { margin: 0 0 1em; }
+a { color: var(--accent); }
+var { font-family: var(--serif); font-style: italic; font-size: 1.04em; }
+strong { font-weight: 650; }
+
+.top { position: sticky; top: 0; z-index: 20; background: color-mix(in srgb, var(--bg) 88%, transparent); backdrop-filter: blur(8px); border-bottom: 1px solid var(--line); }
+.top-in { max-width: 1240px; margin: 0 auto; padding: 10px 22px; display: flex; align-items: center; gap: 16px; }
+.brand { font-family: var(--serif); font-weight: 600; font-size: 1.05rem; color: var(--ink); text-decoration: none; white-space: nowrap; }
+.brand span { color: var(--accent); }
+.toc { display: flex; gap: 4px; overflow-x: auto; flex: 1; scrollbar-width: none; }
+.toc::-webkit-scrollbar { display: none; }
+.toc a { flex: none; font-size: .86rem; color: var(--muted); text-decoration: none; padding: 5px 10px; border-radius: 999px; }
+.toc a:hover { color: var(--ink); background: var(--surface); }
+.toc a[aria-current] { color: var(--accent-ink); background: var(--accent); }
+#theme { flex: none; font: inherit; font-size: .84rem; color: var(--ink-2); background: var(--surface); border: 1px solid var(--line); border-radius: 999px; padding: 5px 12px; cursor: pointer; }
+
+.wrap { max-width: 980px; margin: 0 auto; padding: 0 22px; }
+.hero { padding: 54px 0 26px; display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); gap: 40px; align-items: center; }
+.hero h1 { font-size: clamp(2.3rem, 5vw, 3.5rem); letter-spacing: -.015em; }
+.hero h1 em { font-style: italic; color: var(--accent); }
+.hero .sub { font-size: 1.16rem; color: var(--ink-2); margin: 18px 0 20px; max-width: 34em; }
+.badges { display: flex; flex-wrap: wrap; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.badges li { font-size: .85rem; color: var(--ink-2); background: var(--surface); border: 1px solid var(--line); border-radius: 999px; padding: 4px 12px; }
+.board { background: var(--surface); border: 1px solid var(--line); border-radius: 18px; padding: 16px 16px 12px; box-shadow: var(--shadow); }
+.board canvas { display: block; width: 100%; height: 300px; }
+.board p { font-size: .88rem; color: var(--muted); margin: 8px 2px 0; display: flex; gap: 12px; align-items: flex-start; justify-content: space-between; }
+.board button { flex: none; }
+
+.howto { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; margin: 14px 0 10px; padding: 0; list-style: none; counter-reset: step; }
+.howto li { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px 14px 52px; position: relative; font-size: .95rem; color: var(--ink-2); counter-increment: step; }
+.howto li::before { content: counter(step); position: absolute; left: 14px; top: 13px; width: 26px; height: 26px; border-radius: 50%; background: var(--accent-soft); color: var(--accent); font: 600 .9rem/26px var(--serif); text-align: center; }
+
+.lesson { padding: 58px 0 6px; border-top: 1px solid var(--line); margin-top: 46px; }
+.kicker { font-size: .78rem; letter-spacing: .14em; text-transform: uppercase; color: var(--accent); font-weight: 650; margin: 0 0 8px; }
+.lesson h2 { font-size: clamp(1.7rem, 3.4vw, 2.35rem); margin-bottom: 14px; }
+.question { font-family: var(--serif); font-style: italic; font-size: 1.22rem; line-height: 1.45; color: var(--ink-2); border-left: 3px solid var(--accent); padding: 2px 0 2px 16px; margin: 0 0 20px; max-width: 36em; }
+.prose { max-width: 42em; }
+.prose h3 { font-size: 1.3rem; margin: 30px 0 10px; }
+.prose ul { margin: 0 0 1em; padding-left: 1.15em; }
+.prose li { margin-bottom: .45em; }
+.fieldnote { background: var(--accent-soft); border-radius: 14px; padding: 14px 18px; margin: 18px 0; max-width: 42em; color: var(--ink-2); font-size: .97rem; }
+.fieldnote b { color: var(--accent); font-family: var(--serif); font-size: 1.02rem; }
+
+.lab { margin: 24px 0 22px; background: var(--surface); border: 1px solid var(--line); border-radius: 18px; padding: 20px 22px 16px; box-shadow: var(--shadow); }
+.lab-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 6px 20px; margin-bottom: 14px; }
+.lab-head h3 { font-size: 1.22rem; }
+.legend { display: flex; flex-wrap: wrap; gap: 4px 16px; list-style: none; margin: 0; padding: 0; font-size: .84rem; color: var(--ink-2); }
+.sw { display: inline-block; width: 20px; height: 11px; vertical-align: middle; margin-right: 6px; border-radius: 3px; }
+.sw-sim { background: var(--c1); }
+.sw-zero { background: var(--zero); }
+.sw-band { background: color-mix(in srgb, var(--c3) 24%, transparent); border: 1px solid color-mix(in srgb, var(--c3) 45%, transparent); }
+.sw-theory, .sw-alt, .sw-ref { height: 0; border-radius: 0; vertical-align: middle; }
+.sw-theory { border-top: 3px solid var(--c2); }
+.sw-alt { border-top: 3px dashed var(--c3); }
+.sw-ref { border-top: 2px dashed var(--ref); }
+.lab-body { display: grid; grid-template-columns: 232px minmax(0, 1fr); gap: 22px; align-items: start; }
+.controls { display: flex; flex-direction: column; gap: 14px; }
+.ctl { display: block; font-size: .9rem; }
+.ctl-top { display: flex; justify-content: space-between; gap: 10px; align-items: baseline; }
+.ctl-l { color: var(--ink-2); line-height: 1.3; }
+.ctl output { font-weight: 650; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.ctl input[type=range] { width: 100%; margin: 6px 0 0; accent-color: var(--accent); }
+.ctl-hint { display: block; font-size: .8rem; color: var(--muted); line-height: 1.35; margin-top: 3px; }
+.btn { font: inherit; font-size: .92rem; font-weight: 600; color: var(--ink); background: var(--surface-2); border: 1px solid var(--line); border-radius: 10px; padding: 8px 12px; cursor: pointer; text-align: center; }
+.btn:hover { border-color: var(--accent); }
+.btn.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.btn.primary:hover { filter: brightness(1.08); }
+.btn.quiet { background: none; border-color: transparent; color: var(--muted); font-weight: 500; text-decoration: underline; padding: 2px; }
+.btn:focus-visible, .seg button:focus-visible, .quiz button:focus-visible, #theme:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.seg { display: flex; flex-wrap: wrap; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+.seg button { flex: 1 1 auto; font: inherit; font-size: .86rem; padding: 7px 8px; background: var(--surface-2); color: var(--ink-2); border: 0; border-right: 1px solid var(--line); cursor: pointer; }
+.seg button:last-child { border-right: 0; }
+.seg button[aria-pressed=true] { background: var(--accent); color: var(--accent-ink); font-weight: 600; }
+.seg-l { font-size: .9rem; margin-bottom: -8px; }
+.chk { display: flex; gap: 8px; align-items: flex-start; font-size: .9rem; color: var(--ink-2); cursor: pointer; line-height: 1.35; }
+.chk input { margin-top: 3px; accent-color: var(--accent); }
+.stage { min-width: 0; display: grid; gap: 12px; }
+.stage.two { grid-template-columns: minmax(0, .82fr) minmax(0, 1fr); align-items: start; }
+.plot { position: relative; min-width: 0; }
+.plot canvas { display: block; width: 100%; touch-action: pan-y; }
+.plot.square canvas { aspect-ratio: 1; height: auto; border-radius: 10px; }
+.plot-title { font-size: .84rem; color: var(--muted); margin: 0 0 6px; line-height: 1.35; min-height: 2.3em; }
+.chips { font-size: .86rem; color: var(--muted); margin: 0 0 2px; min-height: 1.9em; }
+.chips span { display: inline-block; min-width: 1.75em; text-align: center; margin: 0 2px; padding: 1px 4px; border-radius: 6px; background: var(--surface-2); border: 1px solid var(--line); color: var(--ink); font-variant-numeric: tabular-nums; }
+.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-top: 16px; }
+.tile { background: var(--surface-2); border: 1px solid var(--line); border-radius: 12px; padding: 10px 14px 11px; }
+.tv { display: block; font-family: var(--serif); font-size: 1.5rem; font-weight: 600; line-height: 1.2; font-variant-numeric: tabular-nums; }
+.tl { display: block; font-size: .8rem; color: var(--muted); line-height: 1.32; margin-top: 2px; }
+.lab figcaption { font-size: .88rem; color: var(--muted); margin-top: 12px; max-width: 54em; }
+.tip { position: absolute; z-index: 5; pointer-events: none; background: var(--ink); color: var(--bg); font-size: .8rem; line-height: 1.4; padding: 6px 9px; border-radius: 8px; white-space: nowrap; box-shadow: var(--shadow); }
+.guide { position: absolute; width: 1px; background: var(--ink); opacity: .35; pointer-events: none; }
+
+details.math { max-width: 42em; margin: 14px 0; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); padding: 0 16px; }
+details.math summary { cursor: pointer; padding: 11px 0; font-weight: 600; font-size: .95rem; color: var(--ink-2); }
+details.math[open] summary { border-bottom: 1px solid var(--line); margin-bottom: 12px; }
+details.math p, details.math ul { font-size: .95rem; color: var(--ink-2); }
+.f { font-family: var(--serif); font-size: 1.06em; white-space: nowrap; }
+
+.quiz { max-width: 42em; margin: 22px 0 0; padding: 16px 18px; border: 1px dashed var(--axis); border-radius: 14px; }
+.quiz .q { font-weight: 650; margin-bottom: 10px; }
+.quiz .q::before { content: "Check yourself: "; color: var(--accent); font-family: var(--serif); font-weight: 600; }
+.quiz .opts { display: grid; gap: 8px; }
+.quiz button { font: inherit; font-size: .95rem; text-align: left; background: var(--surface); color: var(--ink); border: 1px solid var(--line); border-radius: 10px; padding: 9px 12px; cursor: pointer; }
+.quiz button:hover { border-color: var(--accent); }
+.quiz button.yes { border-color: var(--good); box-shadow: inset 0 0 0 1px var(--good); }
+.quiz button.no { border-color: var(--bad); box-shadow: inset 0 0 0 1px var(--bad); }
+.quiz .fb { margin: 10px 0 0; font-size: .93rem; min-height: 1.4em; color: var(--ink-2); }
+.quiz .fb.yes { color: var(--good); }
+.quiz .fb.no { color: var(--bad); }
+
+.tablewrap { overflow-x: auto; margin: 18px 0; border: 1px solid var(--line); border-radius: 14px; background: var(--surface); }
+table { border-collapse: collapse; width: 100%; font-size: .92rem; min-width: 640px; }
+th, td { text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-size: .78rem; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); font-weight: 650; background: var(--surface-2); }
+tr:last-child td { border-bottom: 0; }
+td:nth-child(2) { font-weight: 650; }
+td a { text-decoration: none; }
+dl.gloss { display: grid; grid-template-columns: minmax(130px, 200px) minmax(0, 1fr); gap: 8px 20px; margin: 16px 0; font-size: .95rem; }
+dl.gloss dt { font-weight: 650; }
+dl.gloss dd { margin: 0; color: var(--ink-2); }
+.refs { padding-left: 1.2em; font-size: .93rem; color: var(--ink-2); max-width: 46em; }
+.refs li { margin-bottom: .5em; }
+footer { margin-top: 70px; padding: 28px 0 60px; border-top: 1px solid var(--line); color: var(--muted); font-size: .9rem; }
+
+@media (max-width: 820px) {
+  body { font-size: 16px; }
+  .hero { grid-template-columns: 1fr; padding-top: 34px; gap: 24px; }
+  .howto { grid-template-columns: 1fr; }
+  .lab { padding: 16px 14px 14px; border-radius: 14px; }
+  .lab-body { grid-template-columns: 1fr; }
+  .stage.two { grid-template-columns: 1fr; }
+  .plot-title { min-height: 0; }
+  dl.gloss { grid-template-columns: 1fr; gap: 2px; }
+  dl.gloss dd { margin-bottom: 10px; }
+  .brand { display: none; }
+}
+</style>
+</head>
+<body>
+<div class="top">
+  <div class="top-in">
+    <a class="brand" href="#top">Distributions <span>in the Field</span></a>
+    <nav class="toc" aria-label="Lessons">
+      <a href="#start">Start</a>
+      <a href="#binomial">Binomial</a>
+      <a href="#poisson">Poisson</a>
+      <a href="#negbin">Negative binomial</a>
+      <a href="#zeros">Zeros</a>
+      <a href="#lognormal">Lognormal</a>
+      <a href="#survival">Survival</a>
+      <a href="#beta">Beta</a>
+      <a href="#normal">Normal</a>
+      <a href="#resampling">Resampling</a>
+      <a href="#concentration">Targeting</a>
+      <a href="#guide">Field guide</a>
+    </nav>
+    <button id="theme" type="button" aria-label="Switch between light and dark colors">Light / dark</button>
+  </div>
+</div>
+
+<main class="wrap" id="top">
+  <header class="hero">
+    <div>
+      <h1>Distributions <em>in the Field</em></h1>
+      <p class="sub">Ten short lessons on the probability distributions behind mosquito larval surveys, insect counts and ecological data. Every chart is a live simulation: move a slider, press a button, and watch the numbers behave.</p>
+      <ul class="badges">
+        <li>No formulas needed to start</li>
+        <li>Runs in your browser</li>
+        <li>All data are simulated</li>
+      </ul>
+    </div>
+    <div class="board">
+      <canvas id="galton" role="img" aria-label="Beads fall through ten rows of pegs and pile up in a bell shape"></canvas>
+      <p><span>Each bead bounces left or right at ten pegs. Many small coin flips add up to a bell. The orange line is what theory predicts.</span><button class="btn" id="galton-again" type="button">Drop again</button></p>
+    </div>
+  </header>
+
+  <noscript><p class="fieldnote"><b>JavaScript is off.</b> The text of the lessons is readable, but the charts and simulations need JavaScript to run.</p></noscript>
+
+  <ol class="howto">
+    <li>Read the field question at the top of each lesson. It says what the distribution is for.</li>
+    <li>Play with the controls until you can predict what the chart will do before it does it.</li>
+    <li>Answer the check question, then open the formulas if you want them.</li>
+  </ol>
+
+  <!-- ================= START ================= -->
+  <section class="lesson" id="start">
+    <p class="kicker">Start here</p>
+    <h2>What is a distribution?</h2>
+    <p class="question">You dip a ladle into a pond and count the larvae. You dip again one step away and the count is different. What can a pile of unequal counts tell you?</p>
+    <div class="prose">
+      <p>One dip tells you little. The pattern across many dips tells you a lot. A <strong>distribution</strong> is that pattern: every count that can turn up, with how often each one does.</p>
+      <p>Statistics keeps a short catalogue of named distributions. Each one comes from a simple story about how the numbers arise. Learn the stories and you can often say which distribution fits your data before you plot it.</p>
+    </div>
+    <figure class="lab" id="lab-dips"></figure>
+    <div class="prose">
+      <h3>Three things to read from any distribution</h3>
+      <ul>
+        <li><strong>Center.</strong> Where the typical value sits: the mean or the median.</li>
+        <li><strong>Spread.</strong> How far values stray from the center: the variance and its square root, the standard deviation.</li>
+        <li><strong>Shape.</strong> Symmetric or lopsided, how many zeros, how long the tail.</li>
+      </ul>
+      <p>Insect counts are almost never symmetric. Most dips catch few, a handful catch many, and the mean alone hides that. In the lessons below, shape matters as much as the mean.</p>
+    </div>
+    <div class="quiz" data-answer="1" data-why="The pond has not changed. Small samples scatter around the underlying distribution, and the scatter shrinks as dips accumulate.">
+      <p class="q">You take 20 dips and the bars look ragged. What should you conclude?</p>
+      <div class="opts"><button type="button">The pond has no stable pattern</button><button type="button">Twenty dips are too few to show the pattern clearly</button><button type="button">Some of the counts must be wrong</button></div>
+      <p class="fb" aria-live="polite"></p>
+    </div>
+  </section>
+
+  <!-- ================= BINOMIAL ================= -->
+  <section class="lesson" id="binomial">
+    <p class="kicker">Lesson 1 · yes or no</p>
+    <h2>Present or absent: the binomial</h2>
+    <p class="question">A habitat gets 20 dips. How many of them will have larvae in them?</p>
+    <div class="prose">
+      <p>Each dip is a yes-or-no trial. If every dip has the same chance <var>p</var> of holding larvae, and the dips do not influence each other, the number of positive dips out of <var>n</var> follows the <strong>binomial distribution</strong>.</p>
+    </div>
+    <figure class="lab" id="lab-binom"></figure>
+    <div class="prose">
+      <ul>
+        <li>The peak sits near <var>n</var> × <var>p</var>. Move <var>p</var> and the whole hill slides.</li>
+        <li>Near <var>p</var> = 50% the hill is symmetric. Near 0% or 100% it leans against the wall, because a count cannot go below zero or above <var>n</var>.</li>
+        <li>The spread is widest at 50% and shrinks toward both ends.</li>
+      </ul>
+      <h3>Negative, or just not found yet?</h3>
+      <p>If one dip finds larvae with chance <var>p</var>, then <var>n</var> dips all miss with chance (1 − <var>p</var>)<sup><var>n</var></sup>. A habitat is never proven negative. It is negative at a stated effort.</p>
+    </div>
+    <figure class="lab" id="lab-detect"></figure>
+    <p class="fieldnote"><b>In the field.</b> Low-density habitats need many more dips than crowded ones. When a protocol fixes the number of dips, this curve tells you which habitats it will quietly miss.</p>
+    <details class="math">
+      <summary>Formulas</summary>
+      <p>Chance of exactly <var>k</var> positives: <span class="f">P(<var>k</var>) = C(<var>n</var>, <var>k</var>) <var>p</var><sup><var>k</var></sup> (1 − <var>p</var>)<sup><var>n</var> − <var>k</var></sup></span></p>
+      <p>Mean <span class="f"><var>n p</var></span>, variance <span class="f"><var>n p</var> (1 − <var>p</var>)</span>.</p>
+      <p>Chance of at least one positive: <span class="f">1 − (1 − <var>p</var>)<sup><var>n</var></sup></span>. Dips needed for a target: <span class="f"><var>n</var> ≥ ln(1 − target) / ln(1 − <var>p</var>)</span>.</p>
+    </details>
+    <div class="quiz" data-answer="2" data-why="0.9 to the power 29 is just under 0.05, so 29 dips leave less than a 5% chance of missing every time. Ten dips still miss 35% of the time.">
+      <p class="q">One dip finds larvae 10% of the time. About how many dips give a 95% chance of at least one positive dip?</p>
+      <div class="opts"><button type="button">10 dips</button><button type="button">19 dips</button><button type="button">29 dips</button></div>
+      <p class="fb" aria-live="polite"></p>
+    </div>
+  </section>
+
+  <!-- ================= POISSON ================= -->
+  <section class="lesson" id="poisson">
+    <p class="kicker">Lesson 2 · counts at random</p>
+    <h2>Scattered at random: the Poisson</h2>
+    <p class="question">If larvae were spread over the water with no pattern at all, what would the counts per dip look like?</p>
+    <div class="prose">
+      <p>When individuals land independently of each other, and each dip samples a small part of the whole, the count per dip follows the <strong>Poisson distribution</strong>. It has a single dial, the mean. Its signature: the variance equals the mean.</p>
+    </div>
+    <figure class="lab" id="lab-field"></figure>
+    <div class="prose">
+      <ul>
+        <li>Keep clumping at <em>none</em> and press <em>Scatter again</em> a few times. The bars hug the dashed Poisson line, and the variance to mean ratio hovers near 1.</li>
+        <li>Even a random scatter has empty squares and crowded squares. Random does not mean even.</li>
+        <li>Now raise the clumping. The mean stays where it was, but empty dips and very full dips both multiply, and the Poisson line no longer fits. That is the next lesson.</li>
+      </ul>
+    </div>
+    <p class="fieldnote"><b>In the field.</b> The variance to mean ratio is one of the oldest tools in insect ecology. Near 1 suggests a random pattern, well above 1 a clumped one, and below 1 an even one, as with territorial animals. Check it before you choose a model for counts.</p>
+    <details class="math">
+      <summary>Formulas</summary>
+      <p>Chance of exactly <var>k</var>: <span class="f">P(<var>k</var>) = λ<sup><var>k</var></sup> e<sup>−λ</sup> / <var>k</var>!</span>, where λ is the mean.</p>
+      <p>Mean λ, variance λ. Chance of an empty dip: <span class="f">e<sup>−λ</sup></span>.</p>
+    </details>
+    <div class="quiz" data-answer="1" data-why="A Poisson count has a variance equal to its mean. A ratio above 5 signals clumping, and the negative binomial is the usual next step.">
+      <p class="q">Counts per trap have a mean of 4 and a variance of 21. Is a Poisson model reasonable?</p>
+      <div class="opts"><button type="button">Yes, the mean is all that matters</button><button type="button">No, the variance is far above the mean</button><button type="button">Only if there are no zeros</button></div>
+      <p class="fb" aria-live="polite"></p>
+    </div>
+  </section>
+
+  <!-- ================= NEGATIVE BINOMIAL ================= -->
+  <section class="lesson" id="negbin">
+    <p class="kicker">Lesson 3 · clumped counts</p>
+    <h2>Clumped counts: the negative binomial</h2>
+    <p class="question">Real larvae are clumped. Most dips are nearly empty and a few are crowded. Which distribution describes that?</p>
+    <div class="prose">
+      <p>Suppose every spot has its own Poisson mean: high along a warm, shallow edge with food, low in open water. Mix those Poisson counts together and you get the <strong>negative binomial</strong>. It has two dials: the mean <var>m</var> and the aggregation parameter <var>k</var>. Small <var>k</var> means strong clumping. As <var>k</var> grows the clumping fades, and at very large <var>k</var> the negative binomial turns into the Poisson.</p>
+    </div>
+    <figure class="lab" id="lab-nb"></figure>
+    <div class="prose">
+      <ul>
+        <li>Slide <var>k</var> down toward 0.2. The zero bar grows and the tail stretches to the right, while the mean does not move.</li>
+        <li>Slide <var>k</var> up past 10. The orange and green curves merge.</li>
+        <li>The variance is <var>m</var> + <var>m</var>²/<var>k</var>. The second term is the extra spread that clumping adds.</li>
+      </ul>
+      <p>Why would counts clump? Eggs are laid in batches, larvae gather along edges and in shade, and neighboring habitats differ in food and predators. Each of these makes the local mean change from place to place.</p>
+    </div>
+    <p class="fieldnote"><b>In the field.</b> Clumping is expensive. The last tile shows how many dips you need before the standard error of the mean falls to about 20% of the mean. With <var>k</var> below 1 the answer is driven almost entirely by <var>k</var>: a pond with more larvae is not easier to measure.</p>
+    <details class="math">
+      <summary>Formulas, and Taylor's power law</summary>
+      <p>Mean <var>m</var>, variance <span class="f"><var>m</var> + <var>m</var>² / <var>k</var></span>. Chance of an empty dip: <span class="f">(1 + <var>m</var> / <var>k</var>)<sup>−<var>k</var></sup></span>.</p>
+      <p>Dips needed for a standard error that is a fraction <var>D</var> of the mean: <span class="f"><var>n</var> = (1 / <var>m</var> + 1 / <var>k</var>) / <var>D</var>²</span>.</p>
+      <p>Across many sites, the variance tends to rise with the mean as a power law, <span class="f"><var>s</var>² = <var>a</var> <var>m</var><sup><var>b</var></sup></span>, with <var>b</var> usually between 1 (random) and 2 (clumping that grows in step with the mean). This is Taylor's power law.</p>
+    </details>
+    <div class="quiz" data-answer="0" data-why="Small k means strong clumping. The variance is 5 + 25/0.5 = 55 in pond A against 5 + 25/8 = 8.1 in pond B.">
+      <p class="q">Two ponds have the same mean of 5 larvae per dip. Pond A has k = 0.5 and pond B has k = 8. Which statement is right?</p>
+      <div class="opts"><button type="button">Pond A has more empty dips and more very full dips</button><button type="button">Pond B is more clumped</button><button type="button">Both ponds have the same variance</button></div>
+      <p class="fb" aria-live="polite"></p>
+    </div>
+  </section>
+
+  <!-- ================= ZEROS ================= -->
+  <section class="lesson" id="zeros">
+    <p class="kicker">Lesson 4 · counts with many zeros</p>
+    <h2>Too many zeros: zero-inflated counts</h2>
+    <p class="question">Half the habitats in a survey have no larvae. Bad luck, or a different kind of habitat?</p>
+    <div class="prose">
+      <p>Two processes can hide behind one column of data. First: can this habitat hold larvae at all? A pit that dried last week, a polluted drain or a covered tank cannot. Second: if it can, how many did the dips catch? A <strong>zero-inflated</strong> model keeps the two apart. A share of habitats always gives zero, and the rest follow a count distribution such as the negative binomial.</p>
+    </div>
+    <figure class="lab" id="lab-zi"></figure>
+    <div class="prose">
+      <ul>
+        <li>Raise the unsuitable share. Only the zero bar grows. The shape of the counts above zero does not change.</li>
+        <li>Now set it to 0% and lower <var>k</var>. The zero bar grows again, for a different reason: clumping. From a histogram alone the two are hard to tell apart.</li>
+        <li>Tick the zoom box to look at the counts above zero.</li>
+      </ul>
+    </div>
+    <p class="fieldnote"><b>In the field.</b> The difference matters for control. An unsuitable habitat needs no larvicide. A suitable habitat with a zero today may be productive after the next rain. Field notes such as water present, habitat type and shade are what let a model separate the two kinds of zero.</p>
+    <details class="math">
+      <summary>Formulas, and the hurdle model</summary>
+      <p>With a share π of unsuitable habitats: chance of a zero <span class="f">π + (1 − π) (1 + <var>m</var> / <var>k</var>)<sup>−<var>k</var></sup></span>, mean over all habitats <span class="f">(1 − π) <var>m</var></span>.</p>
+      <p>A close cousin, the hurdle model, treats all zeros as one group and models the positive counts separately. It answers a slightly different question: is anything there, and if so, how much?</p>
+    </details>
+    <div class="quiz" data-answer="0" data-why="Zero inflation adds habitats that always give zero. The count distribution among suitable habitats is untouched, although the mean over all habitats falls.">
+      <p class="q">The share of unsuitable habitats rises from 20% to 60% and nothing else changes. What happens to the counts in suitable habitats?</p>
+      <div class="opts"><button type="button">Nothing. Only the number of zeros changes</button><button type="button">They become more clumped</button><button type="button">Their mean falls</button></div>
+      <p class="fb" aria-live="polite"></p>
+    </div>
+  </section>
+
+  <!-- ================= LOGNORMAL ================= -->
+  <section class="lesson" id="lognormal">
+    <p class="kicker">Lesson 5 · skewed measurements</p>
+    <h2>Skewed measurements: the lognormal</h2>
+    <p class="question">Larval density, habitat area, development time: positive numbers with a long right tail. How should they be summarized?</p>
+    <div class="prose">
+      <p>Some quantities are built by multiplying many small effects: growth, survival from one stage to the next, dilution. Multiplication skews. Take logarithms and multiplication becomes addition, and sums of many small effects are bell-shaped. A quantity whose logarithm is normal is called <strong>lognormal</strong>.</p>
+    </div>
+    <figure class="lab" id="lab-lognormal"></figure>
+    <div class="prose">
+      <ul>
+        <li>On the natural scale the mean sits to the right of the median, pulled by the tail. Widen the spread and the gap grows.</li>
+        <li>Switch to the log scale. The bars form a symmetric bell, and on that scale the mean and the median coincide.</li>
+        <li>The last tile shows how much of the total sits in the densest tenth of habitats. With a wide spread, a few habitats dominate.</li>
+      </ul>
+    </div>
+    <p class="fieldnote"><b>In the field.</b> For skewed measurements, report the median or the geometric mean and not only the arithmetic mean. For counts with zeros, entomologists often average log(count + 1) and transform back, which is known as Williams' mean. The gamma distribution is a close alternative to the lognormal with a lighter tail.</p>
+    <details class="math">
+      <summary>Formulas</summary>
+      <p>If ln <var>X</var> is normal with mean μ and standard deviation σ: median <span class="f">e<sup>μ</sup></span>, mean <span class="f">e<sup>μ + σ²/2</sup></span>, coefficient of variation <span class="f">√(e<sup>σ²</sup> − 1)</span>.</p>
+    </details>
+    <div class="quiz" data-answer="0" data-why="The long right tail pulls the mean above the median. On the log scale the two would be equal.">
+      <p class="q">Densities in 50 habitats follow a lognormal distribution. Which is larger?</p>
+      <div class="opts"><button type="button">The mean</button><button type="button">The median</button><button type="button">They are equal</button></div>
+      <p class="fb" aria-live="polite"></p>
+    </div>
+  </section>
+
+  <!-- ================= SURVIVAL ================= -->
+  <section class="lesson" id="survival">
+    <p class="kicker">Lesson 6 · time until an event</p>
+    <h2>Lifetimes: survival and the exponential</h2>
+    <p class="question">If an adult mosquito survives each day with the same chance, how many live long enough to pass on malaria?</p>
+    <div class="prose">
+      <p>With a constant daily survival <var>p</var>, the share of a cohort still alive after <var>t</var> days is <var>p</var><sup><var>t</var></sup>. Counted in whole days this is the <strong>geometric distribution</strong>. In continuous time it is the <strong>exponential</strong>. It has no memory: a mosquito that has survived ten days faces the same risk tomorrow as one that emerged today.</p>
+    </div>
+    <figure class="lab" id="lab-survival"></figure>
+    <div class="prose">
+      <ul>
+        <li>The malaria parasite needs roughly 10 days or more inside the mosquito before it can be passed on, depending on the parasite species and the temperature. Only mosquitoes that reach the shaded zone can transmit.</li>
+        <li>Drop daily survival from 90% to 80%. The share reaching day 10 falls from 35% to 11%.</li>
+        <li>The last tile, infective days per emerging mosquito, falls faster still.</li>
+      </ul>
+    </div>
+    <p class="fieldnote"><b>In the field.</b> This steep response is the classic argument for tools that shorten adult life, such as treated nets and indoor spraying. Larval source management pulls a different lever: it lowers the number of adults that emerge in the first place. Real mosquitoes also age, so survival is not exactly constant. The Weibull and Gompertz distributions add that.</p>
+    <details class="math">
+      <summary>Formulas</summary>
+      <p>Share alive after <var>t</var> days: <span class="f"><var>p</var><sup><var>t</var></sup></span>. Average life: <span class="f">1 / (−ln <var>p</var>)</span> days.</p>
+      <p>Expected infective life per emerging mosquito, with an incubation period of <var>n</var> days: <span class="f"><var>p</var><sup><var>n</var></sup> / (−ln <var>p</var>)</span>.</p>
+    </details>
+    <div class="quiz" data-answer="0" data-why="A constant daily survival has no memory. Real mosquitoes do age, which is why this model is a first approximation.">
+      <p class="q">Daily survival is a constant 85%. A mosquito has already lived 12 days. What is its chance of surviving tomorrow?</p>
+      <div class="opts"><button type="button">85%</button><button type="button">Less than 85%, because it is old</button><button type="button">More than 85%, because it is a proven survivor</button></div>
+      <p class="fb" aria-live="polite"></p>
+    </div>
+  </section>
+
+  <!-- ================= BETA ================= -->
+  <section class="lesson" id="beta">
+    <p class="kicker">Lesson 7 · proportions</p>
+    <h2>Uncertain proportions: the beta</h2>
+    <p class="question">3 of 20 habitats were positive. What might the true share be across the whole town?</p>
+    <div class="prose">
+      <p>A proportion lives between 0 and 1, and the <strong>beta distribution</strong> is the standard curve on that interval. Start with no preference for any value, observe <var>x</var> positives out of <var>n</var>, and the plausible values of the true share follow a beta distribution with parameters <var>x</var> + 1 and <var>n</var> − <var>x</var> + 1.</p>
+    </div>
+    <figure class="lab" id="lab-beta"></figure>
+    <div class="prose">
+      <ul>
+        <li>With 3 of 20 the observed share is 15%, but true shares from about 5% to 36% remain plausible.</li>
+        <li>Set 30 of 200, the same 15%. The range narrows to about 11% to 21%.</li>
+        <li>Set 0 of 20. The observed share is zero, yet true shares up to about 16% are still plausible. Finding nothing is not the same as nothing being there.</li>
+      </ul>
+    </div>
+    <p class="fieldnote"><b>In the field.</b> To halve the width of the range you need about four times as many habitats. Near 0% or 100% the curve is lopsided, so a symmetric plus-or-minus interval would be wrong there.</p>
+    <details class="math">
+      <summary>Formulas</summary>
+      <p>Beta(<var>a</var>, <var>b</var>) has mean <span class="f"><var>a</var> / (<var>a</var> + <var>b</var>)</span>. After <var>x</var> positives in <var>n</var> habitats, starting from a flat curve: <span class="f">Beta(<var>x</var> + 1, <var>n</var> − <var>x</var> + 1)</span>.</p>
+    </details>
+    <div class="quiz" data-answer="1" data-why="Zero of 20 rules out high shares but not low ones. Starting from a flat curve, almost all of the plausibility lies below about 16%.">
+      <p class="q">No positive habitat was found among 20 checked. What can you say about the town?</p>
+      <div class="opts"><button type="button">The true share is 0%</button><button type="button">The true share is probably below about 16%</button><button type="button">Nothing can be said from 20 habitats</button></div>
+      <p class="fb" aria-live="polite"></p>
+    </div>
+  </section>
+
+  <!-- ================= NORMAL ================= -->
+  <section class="lesson" id="normal">
+    <p class="kicker">Lesson 8 · averages</p>
+    <h2>Averages behave: the normal distribution</h2>
+    <p class="question">Single counts are wildly skewed. Why do averages over many habitats look bell-shaped?</p>
+    <div class="prose">
+      <p>Add up many independent values, whatever their shape, and the sum drifts toward the <strong>normal distribution</strong>. This is the central limit theorem, and it is the reason the bell curve turns up in so many formulas. The board of pegs at the top of this page shows the same thing: every bead takes ten random steps left or right, and the piles form a bell.</p>
+    </div>
+    <figure class="lab" id="lab-clt"></figure>
+    <div class="prose">
+      <ul>
+        <li>Set the first slider to 1 habitat. The right chart is as skewed as the left.</li>
+        <li>At 10 habitats the averages are still lopsided. By 30 they are close to the bell, and at 100 the fit is tight.</li>
+        <li>The spread of the averages is the spread of single counts divided by the square root of <var>n</var>. Four times the fieldwork halves the error.</li>
+        <li>Lower <var>k</var>. With stronger clumping the bell takes longer to arrive.</li>
+      </ul>
+    </div>
+    <p class="fieldnote"><b>In the field.</b> The standard error, and the familiar interval of plus or minus two standard errors, both rest on this theorem. They can be trusted for averages over many habitats. They are shaky for small, heavily clumped samples.</p>
+    <details class="math">
+      <summary>Formulas</summary>
+      <p>For <var>n</var> independent values with mean μ and standard deviation σ, the average is close to normal with mean μ and standard deviation <span class="f">σ / √<var>n</var></span>, the standard error.</p>
+    </details>
+    <div class="quiz" data-answer="1" data-why="The standard error falls with the square root of the sample size, so halving it takes four times the sample.">
+      <p class="q">To halve the standard error of a mean density, how many times more habitats must you sample?</p>
+      <div class="opts"><button type="button">Twice as many</button><button type="button">Four times as many</button><button type="button">Ten times as many</button></div>
+      <p class="fb" aria-live="polite"></p>
+    </div>
+  </section>
+
+  <!-- ================= RESAMPLING ================= -->
+  <section class="lesson" id="resampling">
+    <p class="kicker">Lesson 9 · when no formula fits</p>
+    <h2>Distributions you build yourself: bootstrap and permutation</h2>
+    <p class="question">A model ranks habitats, and the top-ranked half turns out to hold most of the larvae. How precise is that number, and could it be luck?</p>
+    <div class="prose">
+      <p>Some statistics have no textbook formula. Then you let the computer build the distribution from the data.</p>
+      <p>The <strong>bootstrap</strong> asks how far the number would move in another survey. It draws the habitats again with replacement, thousands of times, and looks at the spread. The <strong>permutation test</strong> asks what chance alone would do. It shuffles the ranking so that it carries no information, thousands of times, and sees how often the shuffled result matches the real one.</p>
+    </div>
+    <figure class="lab" id="lab-resample"></figure>
+    <div class="prose">
+      <ul>
+        <li><strong>Bootstrap view.</strong> The shaded band is the middle 95% of the resampled values. It is the interval you would report.</li>
+        <li><strong>Permutation view.</strong> The bars now pile up around 50%, which is what a ranking with no skill achieves. The P value is the share of shuffles that did at least as well as your survey.</li>
+        <li>Set skill to <em>none</em> and press <em>New survey</em> a few times. The observed value lands anywhere in the pile and the P value is unremarkable, as it should be.</li>
+        <li>With only 60 habitats and clumped counts, the bootstrap interval is wide even for a good ranking.</li>
+      </ul>
+    </div>
+    <p class="fieldnote"><b>In the field.</b> Both tools are routine when a ranking model is evaluated: a bootstrap interval around the score, and a permutation test against random ordering. One rule matters more than any formula: resample the unit you sampled. If habitats were surveyed, resample habitats, not single dips.</p>
+    <div class="quiz" data-answer="1" data-why="The P value counts how often chance alone matches the observed result. At 0.40 the survey gives no evidence that the ranking beats random order.">
+      <p class="q">A permutation test gives P = 0.40. What does that mean?</p>
+      <div class="opts"><button type="button">The ranking is 40% accurate</button><button type="button">Random rankings did as well as yours in 40% of shuffles</button><button type="button">There is a 40% chance that the ranking is useless</button></div>
+      <p class="fb" aria-live="polite"></p>
+    </div>
+  </section>
+
+  <!-- ================= CONCENTRATION ================= -->
+  <section class="lesson" id="concentration">
+    <p class="kicker">Lesson 10 · putting it to work</p>
+    <h2>Why skew is good news for targeted control</h2>
+    <p class="question">If counts are clumped and many habitats are empty, where are the larvae, and how much can targeting gain?</p>
+    <div class="prose">
+      <p>Every lesson so far said the same thing in a different way: larval counts are uneven. Put the habitats in order from most to least productive, add up the larvae as you go, and the unevenness becomes a curve. If larvae were spread evenly the curve would follow the diagonal. The more clumped the counts, the higher it bulges.</p>
+    </div>
+    <figure class="lab" id="lab-concentration"></figure>
+    <div class="prose">
+      <ul>
+        <li>Slide <em>Habitats you can treat</em> and read how much of the larvae they hold. Compare it with the same effort spent at random.</li>
+        <li>Raise the share of empty habitats, or lower <var>k</var>, and the bulge grows.</li>
+        <li>The orange curve is a ceiling. It uses the counts themselves to choose the order, which no planner can do in advance. Random order follows the diagonal. A real ranking model lands in between, and the fraction of that gap it closes is its score. Some projects call that fraction the lift-ratio. Elsewhere the same number is known as the accuracy ratio or the normalized Gini coefficient.</li>
+      </ul>
+    </div>
+    <p class="fieldnote"><b>In the field.</b> A single survey flatters the ceiling. Counts are noisy and habitats change with rain and season, so the habitats on top today will not all be on top next month. Skew tells you that targeting can pay. It does not tell you that you can find the targets.</p>
+    <div class="quiz" data-answer="0" data-why="With no unevenness the coverage curve is the diagonal, and no order beats another. Targeting only pays when counts are concentrated.">
+      <p class="q">In a town where every habitat held the same number of larvae, how much would a perfect ranking gain over random order?</p>
+      <div class="opts"><button type="button">Nothing</button><button type="button">About half</button><button type="button">Everything</button></div>
+      <p class="fb" aria-live="polite"></p>
+    </div>
+  </section>
+
+  <!-- ================= GUIDE ================= -->
+  <section class="lesson" id="guide">
+    <p class="kicker">Field guide</p>
+    <h2>Which distribution should I try?</h2>
+    <div class="prose"><p>Start from the kind of number you have, pick the first candidate, then run the check before you trust it.</p></div>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Your data</th><th>Try first</th><th>Check</th><th>Field example</th></tr></thead>
+        <tbody>
+          <tr><td>Yes or no, a fixed number of tries</td><td><a href="#binomial">Binomial</a></td><td>Same chance on every try, tries independent</td><td>Positive dips out of 20</td></tr>
+          <tr><td>Counts, no clumping</td><td><a href="#poisson">Poisson</a></td><td>Variance close to the mean</td><td>Rare events per trap night</td></tr>
+          <tr><td>Counts, clumped</td><td><a href="#negbin">Negative binomial</a></td><td>Variance well above the mean</td><td>Larvae per dip, adults per trap</td></tr>
+          <tr><td>Counts with a pile of zeros</td><td><a href="#zeros">Zero-inflated or hurdle</a></td><td>More zeros than the negative binomial allows</td><td>Surveys that include dry or unsuitable habitats</td></tr>
+          <tr><td>Positive measurements, long right tail</td><td><a href="#lognormal">Lognormal or gamma</a></td><td>Logs look symmetric</td><td>Density, habitat area, body size</td></tr>
+          <tr><td>Time until an event</td><td><a href="#survival">Exponential, Weibull</a></td><td>Is the daily risk constant?</td><td>Adult lifespan, development time</td></tr>
+          <tr><td>A proportion and its uncertainty</td><td><a href="#beta">Beta</a></td><td>Units sampled independently</td><td>Share of habitats positive</td></tr>
+          <tr><td>An average of many values</td><td><a href="#normal">Normal</a></td><td>Enough values for the skew to wash out</td><td>Mean density across habitats</td></tr>
+          <tr><td>A statistic with no formula</td><td><a href="#resampling">Bootstrap, permutation</a></td><td>Resample the unit you sampled</td><td>A ranking score, coverage of larvae</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="prose">
+      <h3>Words used on this page</h3>
+    </div>
+    <dl class="gloss">
+      <dt>Mean</dt><dd>The sum of the values divided by how many there are.</dd>
+      <dt>Median</dt><dd>The middle value: half are below it and half above.</dd>
+      <dt>Variance</dt><dd>The average squared distance from the mean. Its square root is the standard deviation.</dd>
+      <dt>Standard error</dt><dd>The standard deviation of an estimate, such as a mean, across repeated surveys.</dd>
+      <dt>Parameter</dt><dd>A dial that sets a distribution's center, spread or shape, such as the mean or <var>k</var>.</dd>
+      <dt>Overdispersion</dt><dd>More spread than the Poisson allows: a variance larger than the mean.</dd>
+      <dt>Aggregation parameter <var>k</var></dt><dd>The dial of the negative binomial that controls clumping. Small means clumped.</dd>
+      <dt>Structural zero</dt><dd>A zero that had to happen, because the habitat cannot hold larvae.</dd>
+      <dt>Quantile</dt><dd>The value below which a given share of the data falls. The median is the 50% quantile.</dd>
+      <dt>Interval</dt><dd>A range of plausible values for an unknown quantity, at a stated level such as 95%.</dd>
+      <dt>P value</dt><dd>How often chance alone would give a result at least as extreme as the one observed.</dd>
+    </dl>
+    <div class="prose">
+      <h3>Further reading</h3>
+    </div>
+    <ul class="refs">
+      <li>Bliss C.I. and Fisher R.A. (1953). Fitting the negative binomial distribution to biological data. <i>Biometrics</i> 9: 176-200.</li>
+      <li>Taylor L.R. (1961). Aggregation, variance and the mean. <i>Nature</i> 189: 732-735.</li>
+      <li>Southwood T.R.E. and Henderson P.A. (2000). <i>Ecological Methods</i>, 3rd edition. Blackwell Science.</li>
+      <li>Service M.W. (1993). <i>Mosquito Ecology: Field Sampling Methods</i>, 2nd edition. Elsevier Applied Science.</li>
+      <li>Bolker B.M. (2008). <i>Ecological Models and Data in R</i>. Princeton University Press.</li>
+      <li>Martin T.G. and others (2005). Zero tolerance ecology: improving ecological inference by modelling the source of zero observations. <i>Ecology Letters</i> 8: 1235-1246.</li>
+      <li>Limpert E., Stahel W.A. and Abbt M. (2001). Log-normal distributions across the sciences: keys and clues. <i>BioScience</i> 51: 341-352.</li>
+      <li>Macdonald G. (1957). <i>The Epidemiology and Control of Malaria</i>. Oxford University Press.</li>
+      <li>Efron B. and Tibshirani R.J. (1993). <i>An Introduction to the Bootstrap</i>. Chapman and Hall.</li>
+    </ul>
+  </section>
+
+  <footer>
+    <p>All numbers on this page are simulated in your browser. Nothing here comes from a real survey.</p>
+    <p>Built as a learning aid for larval source management work. Source: <a href="https://github.com/gladcolor/distribution-lab">github.com/gladcolor/distribution-lab</a></p>
+  </footer>
+</main>
+
+<script src="core.js"></script>
+<script src="chart.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
