@@ -1,0 +1,439 @@
+<!doctype html>
+<html lang="zh-Hans">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>田野里的统计分布</title>
+<meta name="description" content="十节交互式短课，讲解蚊幼虫调查、昆虫计数和生态数据背后的概率分布。每张图都是实时模拟。">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230E6B5C'/%3E%3Cpath d='M4 25c5 0 6-17 12-17s7 17 12 17' fill='none' stroke='%23fff' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E">
+<link rel="alternate" hreflang="en" href="https://gladcolor.github.io/distribution-lab/">
+<link rel="alternate" hreflang="zh-Hans" href="https://gladcolor.github.io/distribution-lab/zh/">
+<link rel="stylesheet" href="../style.css">
+<script>try { var t = localStorage.getItem('dl-theme'); if (t === 'dark' || t === 'light') document.documentElement.setAttribute('data-theme', t); } catch (e) {}</script>
+</head>
+<body>
+<div class="top">
+  <div class="top-in">
+    <a class="brand" href="#top">田野里的<span>统计分布</span></a>
+    <nav class="toc" aria-label="课程">
+      <a href="#start">开始</a>
+      <a href="#binomial">二项</a>
+      <a href="#poisson">泊松</a>
+      <a href="#negbin">负二项</a>
+      <a href="#zeros">零膨胀</a>
+      <a href="#lognormal">对数正态</a>
+      <a href="#survival">存活</a>
+      <a href="#beta">贝塔</a>
+      <a href="#normal">正态</a>
+      <a href="#resampling">重抽样</a>
+      <a href="#concentration">靶向</a>
+      <a href="#guide">速查</a>
+    </nav>
+    <div class="lang" role="group" aria-label="语言">
+      <a href="../index.html" lang="en" hreflang="en" aria-label="English" title="English">En</a><a href="#top" lang="zh-Hans" aria-label="中文" aria-current="true">中</a>
+    </div>
+    <button id="theme" type="button" aria-label="切换浅色和深色"><span class="long">浅色 / 深色</span><span class="short" aria-hidden="true">◐</span></button>
+  </div>
+</div>
+
+<main class="wrap" id="top">
+  <header class="hero">
+    <div>
+      <h1>田野里的<br><em>统计分布</em></h1>
+      <p class="sub">十节短课，讲解蚊幼虫调查、昆虫计数和生态数据背后的概率分布。每张图都是实时模拟：拖动滑块，按下按钮，看数字怎样变化。</p>
+      <ul class="badges">
+        <li>入门不需要公式</li>
+        <li>在浏览器中运行</li>
+        <li>全部数据均为模拟</li>
+      </ul>
+    </div>
+    <div class="board">
+      <canvas id="galton" role="img" aria-label="小球穿过十排钉子落下，堆成钟形"></canvas>
+      <p><span>每个小球在十排钉子上各向左或向右弹一次。许多次小小的抛硬币加在一起，就堆成了钟形。橙色线是理论预测。</span><button class="btn" id="galton-again" type="button">再落一次</button></p>
+    </div>
+  </header>
+
+  <noscript><p class="fieldnote"><b>JavaScript 已关闭。</b>课程文字可以阅读，但图表和模拟需要 JavaScript 才能运行。</p></noscript>
+
+  <ol class="howto">
+    <li>先读每课开头的野外问题。它说明这个分布是用来做什么的。</li>
+    <li>动手调控件，直到你能在图变化之前就猜出它会怎样变。</li>
+    <li>回答自测题，需要时再展开公式。</li>
+  </ol>
+
+  <!-- ================= START ================= -->
+  <section class="lesson" id="start">
+    <p class="kicker">从这里开始</p>
+    <h2>什么是分布？</h2>
+    <p class="question">你用水勺在池塘里舀一勺，数一数幼虫。往旁边走一步再舀一勺，数目就不一样了。一堆参差不齐的计数能告诉你什么？</p>
+    <div class="prose">
+      <p>一勺说明不了多少，许多勺合在一起的规律却能说明很多。<strong>分布</strong>（distribution）就是这种规律：每一个可能出现的计数，以及它出现的频率。</p>
+      <p>统计学里有一份不长的常用分布名录，每个分布都来自一个关于数字如何产生的简单故事。记住这些故事，你往往在作图之前就能说出数据符合哪一种分布。</p>
+    </div>
+    <figure class="lab" id="lab-dips"></figure>
+    <div class="prose">
+      <h3>读任何分布都要看三件事</h3>
+      <ul>
+        <li><strong>中心。</strong>典型值在哪里：均值或中位数。</li>
+        <li><strong>离散程度。</strong>数值偏离中心有多远：方差，以及它的平方根，标准差。</li>
+        <li><strong>形状。</strong>对称还是偏斜，零有多少，尾巴有多长。</li>
+      </ul>
+      <p>昆虫计数几乎从不对称。大多数勺舀到的很少，少数几勺舀到很多，单看均值看不出这一点。在下面的课程里，形状和均值同样重要。</p>
+    </div>
+    <div class="quiz" data-answer="1" data-why="池塘并没有变。小样本围绕真实分布上下波动，勺数越多，波动越小。">
+      <p class="q">你舀了 20 勺，柱子参差不齐。应当得出什么结论？</p>
+      <div class="opts"><button type="button">池塘没有稳定的规律</button><button type="button">20 勺太少，还看不清规律</button><button type="button">有些计数一定数错了</button></div>
+      <p class="fb" aria-live="polite"></p>
+    </div>
+  </section>
+
+  <!-- ================= BINOMIAL ================= -->
+  <section class="lesson" id="binomial">
+    <p class="kicker">第 1 课 · 是或否</p>
+    <h2>有或无：二项分布</h2>
+    <p class="question">一个孳生地舀 20 勺。其中有多少勺里会有幼虫？</p>
+    <div class="prose">
+      <p>孳生地指可能有蚊幼虫的水体，例如水坑、池塘、沟渠和容器积水。每一勺都是一次“是或否”的试验：舀到幼虫就记为阳性。如果每一勺舀到幼虫的概率 <var>p</var> 都相同，而且各勺互不影响，那么 <var>n</var> 勺中阳性勺的数目服从<strong>二项分布</strong>（binomial distribution）。</p>
+    </div>
+    <figure class="lab" id="lab-binom"></figure>
+    <div class="prose">
+      <ul>
+        <li>峰值位于 <var>n</var> × <var>p</var> 附近。改变 <var>p</var>，整座山峰随之移动。</li>
+        <li><var>p</var> 接近 50% 时山峰对称。接近 0% 或 100% 时山峰靠在墙边，因为计数不能小于零，也不能大于 <var>n</var>。</li>
+        <li>离散程度在 50% 时最大，向两端逐渐缩小。</li>
+      </ul>
+      <h3>是真阴性，还是只是还没找到？</h3>
+      <p>如果一勺发现幼虫的概率是 <var>p</var>，那么 <var>n</var> 勺全部落空的概率是 (1 − <var>p</var>)<sup><var>n</var></sup>。一个孳生地永远无法被证明为阴性，只能说在一定的采样力度下为阴性。</p>
+    </div>
+    <figure class="lab" id="lab-detect"></figure>
+    <p class="fieldnote"><b>在野外。</b>低密度的孳生地比幼虫密集的孳生地需要多得多的勺数。如果调查方案规定了固定的勺数，这条曲线会告诉你哪些孳生地会被悄悄漏掉。</p>
+    <details class="math">
+      <summary>公式</summary>
+      <p>恰好 <var>k</var> 勺阳性的概率：<span class="f">P(<var>k</var>) = C(<var>n</var>, <var>k</var>) <var>p</var><sup><var>k</var></sup> (1 − <var>p</var>)<sup><var>n</var> − <var>k</var></sup></span></p>
+      <p>均值 <span class="f"><var>n p</var></span>，方差 <span class="f"><var>n p</var> (1 − <var>p</var>)</span>。</p>
+      <p>至少一勺阳性的概率：<span class="f">1 − (1 − <var>p</var>)<sup><var>n</var></sup></span>。达到目标所需的勺数：<span class="f"><var>n</var> ≥ ln(1 − 目标) / ln(1 − <var>p</var>)</span>。</p>
+    </details>
+    <div class="quiz" data-answer="2" data-why="0.9 的 29 次方略小于 0.05，所以舀 29 勺时全部落空的概率不到 5%。只舀 10 勺仍有 35% 的可能全部落空。">
+      <p class="q">一勺有 10% 的概率发现幼虫。大约要舀多少勺，才有 95% 的把握至少一勺阳性？</p>
+      <div class="opts"><button type="button">10 勺</button><button type="button">19 勺</button><button type="button">29 勺</button></div>
+      <p class="fb" aria-live="polite"></p>
+    </div>
+  </section>
+
+  <!-- ================= POISSON ================= -->
+  <section class="lesson" id="poisson">
+    <p class="kicker">第 2 课 · 随机的计数</p>
+    <h2>随机散布：泊松分布</h2>
+    <p class="question">如果幼虫毫无规律地散布在水面上，每勺的计数会是什么样子？</p>
+    <div class="prose">
+      <p>当个体彼此独立地落在各处，而每一勺只取到整体的一小部分时，每勺的计数服从<strong>泊松分布</strong>（Poisson distribution）。它只有一个旋钮：均值。它的标志是方差等于均值。</p>
+    </div>
+    <figure class="lab" id="lab-field"></figure>
+    <div class="prose">
+      <ul>
+        <li>把聚集程度保持在“无”，多按几次“再撒一次”。柱子紧贴泊松分布的虚线，方差均值比在 1 附近徘徊。</li>
+        <li>即使是随机散布，也有空的方格和拥挤的方格。随机不等于均匀。</li>
+        <li>现在调高聚集程度。均值没有变，但空勺和特别满的勺都多了起来，泊松曲线不再合适。这就是下一课的内容。</li>
+      </ul>
+    </div>
+    <p class="fieldnote"><b>在野外。</b>方差均值比是昆虫生态学中最古老的工具之一。接近 1 提示随机分布，远大于 1 提示聚集分布，小于 1 提示均匀分布，例如有领地行为的动物。为计数选择模型之前，先算一算它。</p>
+    <details class="math">
+      <summary>公式</summary>
+      <p>恰好为 <var>k</var> 的概率：<span class="f">P(<var>k</var>) = λ<sup><var>k</var></sup> e<sup>−λ</sup> / <var>k</var>!</span>，其中 λ 是均值。</p>
+      <p>均值 λ，方差 λ。空勺的概率：<span class="f">e<sup>−λ</sup></span>。</p>
+    </details>
+    <div class="quiz" data-answer="1" data-why="泊松计数的方差等于均值。这里的方差均值比超过 5，说明存在聚集，通常下一步改用负二项分布。">
+      <p class="q">每个诱蚊器的计数均值为 4，方差为 21。用泊松模型合理吗？</p>
+      <div class="opts"><button type="button">合理，只看均值就够了</button><button type="button">不合理，方差远大于均值</button><button type="button">只有在没有零的时候才合理</button></div>
+      <p class="fb" aria-live="polite"></p>
+    </div>
+  </section>
+
+  <!-- ================= NEGATIVE BINOMIAL ================= -->
+  <section class="lesson" id="negbin">
+    <p class="kicker">第 3 课 · 聚集的计数</p>
+    <h2>聚集的计数：负二项分布</h2>
+    <p class="question">真实的幼虫是聚集的。大多数勺几乎是空的，少数几勺挤满了幼虫。哪种分布能描述这种情况？</p>
+    <div class="prose">
+      <p>假设每个位置都有自己的泊松均值：在温暖、水浅、食物多的岸边高，在开阔水面低。把这些泊松计数混合起来，就得到<strong>负二项分布</strong>（negative binomial distribution）。它有两个旋钮：均值 <var>m</var> 和聚集参数 <var>k</var>。<var>k</var> 小表示强烈聚集。随着 <var>k</var> 增大，聚集逐渐消失，当 <var>k</var> 非常大时，负二项分布就变成泊松分布。</p>
+    </div>
+    <figure class="lab" id="lab-nb"></figure>
+    <div class="prose">
+      <ul>
+        <li>把 <var>k</var> 往下拖到 0.2 附近。零柱变高，尾巴向右伸长，而均值没有动。</li>
+        <li>把 <var>k</var> 往上拖过 10。橙色曲线和绿色曲线合在了一起。</li>
+        <li>方差是 <var>m</var> + <var>m</var>²/<var>k</var>。第二项就是聚集带来的额外离散。</li>
+      </ul>
+      <p>计数为什么会聚集？卵是成批产下的，幼虫聚在岸边和阴凉处，相邻的孳生地在食物和天敌方面各不相同。这些都使局部均值因地而异。</p>
+    </div>
+    <p class="fieldnote"><b>在野外。</b>聚集的代价很高。最后一张卡片显示，要让均值的标准误降到均值的 20% 左右需要舀多少勺。当 <var>k</var> 小于 1 时，答案几乎完全由 <var>k</var> 决定：幼虫更多的池塘并不更容易测准。</p>
+    <details class="math">
+      <summary>公式，以及泰勒幂法则</summary>
+      <p>均值 <var>m</var>，方差 <span class="f"><var>m</var> + <var>m</var>² / <var>k</var></span>。空勺的概率：<span class="f">(1 + <var>m</var> / <var>k</var>)<sup>−<var>k</var></sup></span>。</p>
+      <p>要使标准误等于均值的一个比例 <var>D</var>，所需的勺数为：<span class="f"><var>n</var> = (1 / <var>m</var> + 1 / <var>k</var>) / <var>D</var>²</span>。</p>
+      <p>在许多调查点之间，方差往往随均值按幂函数增长，<span class="f"><var>s</var>² = <var>a</var> <var>m</var><sup><var>b</var></sup></span>，其中 <var>b</var> 通常在 1（随机）和 2（聚集程度随均值同步增长）之间。这就是泰勒幂法则（Taylor's power law）。</p>
+    </details>
+    <div class="quiz" data-answer="0" data-why="k 小表示强烈聚集。池塘 A 的方差是 5 + 25/0.5 = 55，池塘 B 的方差是 5 + 25/8 = 8.1。">
+      <p class="q">两个池塘每勺的平均幼虫数都是 5。池塘 A 的 k = 0.5，池塘 B 的 k = 8。下面哪种说法正确？</p>
+      <div class="opts"><button type="button">池塘 A 的空勺更多，特别满的勺也更多</button><button type="button">池塘 B 聚集得更厉害</button><button type="button">两个池塘的方差相同</button></div>
+      <p class="fb" aria-live="polite"></p>
+    </div>
+  </section>
+
+  <!-- ================= ZEROS ================= -->
+  <section class="lesson" id="zeros">
+    <p class="kicker">第 4 课 · 零很多的计数</p>
+    <h2>零太多：零膨胀计数</h2>
+    <p class="question">一次调查中有一半的孳生地没有幼虫。是运气不好，还是这些孳生地属于另一种类型？</p>
+    <div class="prose">
+      <p>同一列数据背后可能藏着两个过程。第一：这个孳生地到底能不能养活幼虫？上周刚干涸的坑、受污染的排水沟、加了盖的水箱都不能。第二：如果能，这几勺舀到了多少？<strong>零膨胀</strong>（zero-inflated）模型把这两个过程分开：一部分孳生地永远给出零，其余的服从某种计数分布，例如负二项分布。</p>
+    </div>
+    <figure class="lab" id="lab-zi"></figure>
+    <div class="prose">
+      <ul>
+        <li>调高不适宜孳生地的占比。只有零柱变高，大于零的计数形状不变。</li>
+        <li>现在把它调到 0%，再调低 <var>k</var>。零柱又变高了，但原因不同：聚集。单看直方图，很难把这两种情况区分开。</li>
+        <li>勾选放大选项，查看大于零的计数。</li>
+      </ul>
+    </div>
+    <p class="fieldnote"><b>在野外。</b>这种区别对防治很重要。不适宜的孳生地不需要施用杀幼剂。今天计数为零的适宜孳生地，下一场雨后可能就会大量孳生。是否有水、孳生地类型、遮荫情况等野外记录，正是模型区分两种零的依据。</p>
+    <details class="math">
+      <summary>公式，以及栅栏模型</summary>
+      <p>设不适宜孳生地的比例为 π：出现零的概率 <span class="f">π + (1 − π) (1 + <var>m</var> / <var>k</var>)<sup>−<var>k</var></sup></span>，全部孳生地的均值 <span class="f">(1 − π) <var>m</var></span>。</p>
+      <p>它的近亲是栅栏模型（hurdle model），把所有的零归为一组，对大于零的计数单独建模。它回答的问题略有不同：有没有？如果有，有多少？</p>
+    </details>
+    <div class="quiz" data-answer="0" data-why="零膨胀增加的是永远为零的孳生地。适宜孳生地中的计数分布不受影响，不过全部孳生地的均值会下降。">
+      <p class="q">不适宜孳生地的比例从 20% 升到 60%，其他都不变。适宜孳生地里的计数会怎样？</p>
+      <div class="opts"><button type="button">没有变化，只是零的数目变了</button><button type="button">变得更聚集</button><button type="button">均值下降</button></div>
+      <p class="fb" aria-live="polite"></p>
+    </div>
+  </section>
+
+  <!-- ================= LOGNORMAL ================= -->
+  <section class="lesson" id="lognormal">
+    <p class="kicker">第 5 课 · 偏态的测量值</p>
+    <h2>偏态的测量值：对数正态分布</h2>
+    <p class="question">幼虫密度、孳生地面积、发育时间：都是正数，都有长长的右尾。应当怎样概括它们？</p>
+    <div class="prose">
+      <p>有些量是由许多小的效应相乘而成的：生长、从一个发育阶段到下一个阶段的存活、稀释。相乘会造成偏斜。取对数之后，乘法变成加法，而许多小效应之和呈钟形。对数服从正态分布的量，就称为服从<strong>对数正态分布</strong>（lognormal distribution）。</p>
+    </div>
+    <figure class="lab" id="lab-lognormal"></figure>
+    <div class="prose">
+      <ul>
+        <li>在原始尺度上，均值位于中位数的右边，是被尾巴拉过去的。把离散程度调大，两者的差距随之增大。</li>
+        <li>切换到对数尺度。柱子形成对称的钟形，在这个尺度上均值和中位数重合。</li>
+        <li>最后一张卡片显示密度最高的十分之一孳生地占了总量的多少。离散程度大时，少数孳生地占主导。</li>
+      </ul>
+    </div>
+    <p class="fieldnote"><b>在野外。</b>对偏态的测量值，应报告中位数或几何均值，而不只是算术均值。对含零的计数，昆虫学家常对 log(计数 + 1) 取平均再变换回来，称为威廉姆斯均值（Williams' mean）。伽马分布是对数正态分布的近似替代，尾部更轻。</p>
+    <details class="math">
+      <summary>公式</summary>
+      <p>如果 ln <var>X</var> 服从均值为 μ、标准差为 σ 的正态分布：中位数 <span class="f">e<sup>μ</sup></span>，均值 <span class="f">e<sup>μ + σ²/2</sup></span>，变异系数 <span class="f">√(e<sup>σ²</sup> − 1)</span>。</p>
+    </details>
+    <div class="quiz" data-answer="0" data-why="长长的右尾把均值拉到中位数之上。在对数尺度上两者相等。">
+      <p class="q">50 个孳生地的密度服从对数正态分布。哪个更大？</p>
+      <div class="opts"><button type="button">均值</button><button type="button">中位数</button><button type="button">两者相等</button></div>
+      <p class="fb" aria-live="polite"></p>
+    </div>
+  </section>
+
+  <!-- ================= SURVIVAL ================= -->
+  <section class="lesson" id="survival">
+    <p class="kicker">第 6 课 · 事件发生前的时间</p>
+    <h2>寿命：存活与指数分布</h2>
+    <p class="question">如果成蚊每天存活的概率都相同，有多少能活到足以传播疟疾？</p>
+    <div class="prose">
+      <p>如果日存活率 <var>p</var> 恒定，一批蚊子在 <var>t</var> 天后仍存活的比例是 <var>p</var><sup><var>t</var></sup>。按整天计算，这是<strong>几何分布</strong>（geometric distribution）；在连续时间里，这是<strong>指数分布</strong>（exponential distribution）。它没有记忆：一只已经活了十天的蚊子，明天面临的风险与今天刚羽化的蚊子相同。</p>
+    </div>
+    <figure class="lab" id="lab-survival"></figure>
+    <div class="prose">
+      <ul>
+        <li>疟原虫需要在蚊体内发育大约 10 天或更久才能被传播出去，具体取决于疟原虫种类和温度。只有活到阴影区的蚊子才能传播。</li>
+        <li>把日存活率从 90% 降到 80%。活到第 10 天的比例从 35% 降到 11%。</li>
+        <li>最后一张卡片，每只羽化蚊子的感染性天数，下降得更快。</li>
+      </ul>
+    </div>
+    <p class="fieldnote"><b>在野外。</b>这种剧烈的变化，是采用缩短成蚊寿命的工具（如药浸蚊帐和室内滞留喷洒）的经典理由。幼虫孳生地管理（larval source management）拉动的是另一根杠杆：它从源头上减少羽化的成蚊数量。真实的蚊子也会衰老，所以存活率并不完全恒定。韦布尔分布（Weibull）和冈珀茨分布（Gompertz）可以把这一点考虑进去。</p>
+    <details class="math">
+      <summary>公式</summary>
+      <p><var>t</var> 天后仍存活的比例：<span class="f"><var>p</var><sup><var>t</var></sup></span>。平均寿命：<span class="f">1 / (−ln <var>p</var>)</span> 天。</p>
+      <p>潜伏期为 <var>n</var> 天时，每只羽化蚊子的期望感染性寿命：<span class="f"><var>p</var><sup><var>n</var></sup> / (−ln <var>p</var>)</span>。</p>
+    </details>
+    <div class="quiz" data-answer="0" data-why="恒定的日存活率没有记忆。真实的蚊子确实会衰老，所以这个模型只是初步近似。">
+      <p class="q">日存活率恒定为 85%。一只蚊子已经活了 12 天。它明天存活的概率是多少？</p>
+      <div class="opts"><button type="button">85%</button><button type="button">低于 85%，因为它老了</button><button type="button">高于 85%，因为它已被证明能活下来</button></div>
+      <p class="fb" aria-live="polite"></p>
+    </div>
+  </section>
+
+  <!-- ================= BETA ================= -->
+  <section class="lesson" id="beta">
+    <p class="kicker">第 7 课 · 比例</p>
+    <h2>不确定的比例：贝塔分布</h2>
+    <p class="question">20 个孳生地中有 3 个阳性。整个城镇的真实比例可能是多少？</p>
+    <div class="prose">
+      <p>比例介于 0 和 1 之间，<strong>贝塔分布</strong>（beta distribution）是这个区间上的标准曲线。开始时对任何取值都没有偏好，然后在 <var>n</var> 个中观察到 <var>x</var> 个阳性，那么真实比例的可信取值服从参数为 <var>x</var> + 1 和 <var>n</var> − <var>x</var> + 1 的贝塔分布。</p>
+    </div>
+    <figure class="lab" id="lab-beta"></figure>
+    <div class="prose">
+      <ul>
+        <li>20 个中有 3 个时，观察到的比例是 15%，但从大约 5% 到 36% 的真实比例都仍然可信。</li>
+        <li>设为 200 个中有 30 个，同样是 15%。范围缩小到大约 11% 至 21%。</li>
+        <li>设为 20 个中有 0 个。观察到的比例是零，但真实比例高达约 16% 仍然可信。没有发现不等于不存在。</li>
+      </ul>
+    </div>
+    <p class="fieldnote"><b>在野外。</b>要把范围的宽度减半，大约需要四倍的孳生地。在接近 0% 或 100% 时曲线是偏斜的，所以对称的“加减”区间在那里是错的。</p>
+    <details class="math">
+      <summary>公式</summary>
+      <p>Beta(<var>a</var>, <var>b</var>) 的均值为 <span class="f"><var>a</var> / (<var>a</var> + <var>b</var>)</span>。从平坦的曲线出发，在 <var>n</var> 个孳生地中观察到 <var>x</var> 个阳性之后：<span class="f">Beta(<var>x</var> + 1, <var>n</var> − <var>x</var> + 1)</span>。</p>
+    </details>
+    <div class="quiz" data-answer="1" data-why="20 个中 0 个阳性排除了高比例，但排除不了低比例。从平坦的曲线出发，几乎全部的可信度都落在约 16% 以下。">
+      <p class="q">检查了 20 个孳生地，没有发现阳性。对整个城镇能说些什么？</p>
+      <div class="opts"><button type="button">真实比例是 0%</button><button type="button">真实比例很可能低于约 16%</button><button type="button">20 个孳生地什么也说明不了</button></div>
+      <p class="fb" aria-live="polite"></p>
+    </div>
+  </section>
+
+  <!-- ================= NORMAL ================= -->
+  <section class="lesson" id="normal">
+    <p class="kicker">第 8 课 · 平均值</p>
+    <h2>平均值很规矩：正态分布</h2>
+    <p class="question">单个计数偏得厉害。为什么许多孳生地的平均值看起来却是钟形？</p>
+    <div class="prose">
+      <p>把许多相互独立的数值加起来，不管它们各自的形状如何，总和都会趋向<strong>正态分布</strong>（normal distribution）。这就是中心极限定理，也是钟形曲线出现在那么多公式里的原因。本页顶部的钉板展示的是同一件事：每个小球随机向左或向右走十步，堆出来的就是钟形。</p>
+    </div>
+    <figure class="lab" id="lab-clt"></figure>
+    <div class="prose">
+      <ul>
+        <li>把第一个滑块调到 1 个孳生地。右图和左图一样偏。</li>
+        <li>10 个孳生地时，平均值仍然偏斜。到 30 个时已接近钟形，到 100 个时吻合得很好。</li>
+        <li>平均值的离散程度等于单个计数的离散程度除以 <var>n</var> 的平方根。四倍的野外工作量才能把误差减半。</li>
+        <li>调低 <var>k</var>。聚集越强，钟形来得越慢。</li>
+      </ul>
+    </div>
+    <p class="fieldnote"><b>在野外。</b>标准误，以及常用的“加减两倍标准误”区间，都建立在这个定理之上。对许多孳生地的平均值，它们是可靠的。对样本小又高度聚集的数据，它们并不可靠。</p>
+    <details class="math">
+      <summary>公式</summary>
+      <p>对 <var>n</var> 个均值为 μ、标准差为 σ 的独立数值，其平均值近似服从均值为 μ、标准差为 <span class="f">σ / √<var>n</var></span> 的正态分布，这个标准差就是标准误。</p>
+    </details>
+    <div class="quiz" data-answer="1" data-why="标准误随样本量的平方根下降，所以减半需要四倍的样本。">
+      <p class="q">要把平均密度的标准误减半，需要调查多少倍的孳生地？</p>
+      <div class="opts"><button type="button">两倍</button><button type="button">四倍</button><button type="button">十倍</button></div>
+      <p class="fb" aria-live="polite"></p>
+    </div>
+  </section>
+
+  <!-- ================= RESAMPLING ================= -->
+  <section class="lesson" id="resampling">
+    <p class="kicker">第 9 课 · 没有现成公式时</p>
+    <h2>自己构造分布：自助法与置换检验</h2>
+    <p class="question">一个模型给孳生地排序，结果排名前一半的孳生地拥有大部分幼虫。这个数字有多精确？会不会只是运气？</p>
+    <div class="prose">
+      <p>有些统计量没有教科书公式。这时就让计算机根据数据来构造分布。</p>
+      <p><strong>自助法</strong>（bootstrap）问的是：换一次调查，这个数字会变动多少。它对孳生地做有放回的重复抽样，重复几千次，看结果的离散程度。<strong>置换检验</strong>（permutation test）问的是：单凭偶然会得到什么。它把排序打乱，使排序不含任何信息，重复几千次，看打乱后的结果有多少次能达到真实结果。</p>
+    </div>
+    <figure class="lab" id="lab-resample"></figure>
+    <div class="prose">
+      <ul>
+        <li><strong>自助法视图。</strong>阴影带是重抽样值的中间 95%。这就是你要报告的区间。</li>
+        <li><strong>置换检验视图。</strong>这时柱子堆在 50% 附近，这正是毫无能力的排序所能达到的水平。P 值是打乱后表现不低于你这次调查的比例。</li>
+        <li>把排序能力调到“无”，多按几次“重新调查”。观察值会落在这堆柱子的任何位置，P 值平平无奇，本该如此。</li>
+        <li>只有 60 个孳生地，计数又是聚集的，所以即使排序很好，自助法区间也很宽。</li>
+      </ul>
+    </div>
+    <p class="fieldnote"><b>在野外。</b>评估排序模型时，这两种工具都是常规做法：给得分配上一个自助法区间，再用置换检验与随机排序比较。有一条规则比任何公式都重要：按你抽样的单位来重抽样。如果调查的单位是孳生地，就对孳生地重抽样，而不是对单独的勺。</p>
+    <div class="quiz" data-answer="1" data-why="P 值统计的是单凭偶然能达到观察结果的频率。P 值为 0.40 时，这次调查不能提供排序优于随机顺序的证据。">
+      <p class="q">置换检验得到 P = 0.40。这是什么意思？</p>
+      <div class="opts"><button type="button">排序的准确率是 40%</button><button type="button">在 40% 的打乱中，随机排序的表现不比你的差</button><button type="button">排序有 40% 的可能毫无用处</button></div>
+      <p class="fb" aria-live="polite"></p>
+    </div>
+  </section>
+
+  <!-- ================= CONCENTRATION ================= -->
+  <section class="lesson" id="concentration">
+    <p class="kicker">第 10 课 · 学以致用</p>
+    <h2>为什么偏态对靶向防治是好消息</h2>
+    <p class="question">如果计数是聚集的，许多孳生地是空的，那么幼虫都在哪里？靶向处理又能带来多大收益？</p>
+    <div class="prose">
+      <p>前面每一课都在用不同的方式说同一件事：幼虫计数是不均匀的。把孳生地按产量从高到低排列，边排边累加幼虫数，这种不均匀就变成了一条曲线。如果幼虫均匀分布，曲线会沿着对角线走。计数越聚集，曲线鼓得越高。</p>
+    </div>
+    <figure class="lab" id="lab-concentration"></figure>
+    <div class="prose">
+      <ul>
+        <li>拖动“你能处理的孳生地”，读出这些孳生地拥有多少幼虫。再与随机投入同样工作量的结果比较。</li>
+        <li>调高没有幼虫的孳生地的比例，或者调低 <var>k</var>，曲线鼓得更高。</li>
+        <li>橙色曲线是上限。它直接用计数本身来决定顺序，而任何计划者都不可能事先做到这一点。随机顺序沿对角线走。真实的排序模型落在两者之间，它填补了这段差距的多大比例，就是它的得分。有些项目把这个比例称为提升比（lift-ratio）。在别处，同一个数字被称为准确率比（accuracy ratio）或归一化基尼系数（normalized Gini coefficient）。</li>
+      </ul>
+    </div>
+    <p class="fieldnote"><b>在野外。</b>单次调查会高估上限。计数有噪声，孳生地又随降雨和季节变化，今天排在前面的孳生地下个月不会全都还在前面。偏态告诉你靶向处理可能有回报，却没有告诉你一定找得到目标。</p>
+    <div class="quiz" data-answer="0" data-why="没有不均匀时，覆盖曲线就是对角线，任何顺序都不比别的顺序好。只有计数集中时，靶向处理才有回报。">
+      <p class="q">在一个每个孳生地幼虫数都相同的城镇里，完美的排序比随机顺序能多得到多少？</p>
+      <div class="opts"><button type="button">没有收益</button><button type="button">大约一半</button><button type="button">全部</button></div>
+      <p class="fb" aria-live="polite"></p>
+    </div>
+  </section>
+
+  <!-- ================= GUIDE ================= -->
+  <section class="lesson" id="guide">
+    <p class="kicker">野外速查</p>
+    <h2>我该先试哪种分布？</h2>
+    <div class="prose"><p>从你手头数字的类型出发，选出第一候选，然后先做检查，再信任它。</p></div>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>你的数据</th><th>先试</th><th>检查</th><th>野外例子</th></tr></thead>
+        <tbody>
+          <tr><td>是或否，试验次数固定</td><td><a href="#binomial">二项分布</a></td><td>每次试验概率相同，各次试验相互独立</td><td>20 勺中的阳性勺数</td></tr>
+          <tr><td>计数，没有聚集</td><td><a href="#poisson">泊松分布</a></td><td>方差接近均值</td><td>每个诱捕夜的罕见事件数</td></tr>
+          <tr><td>计数，有聚集</td><td><a href="#negbin">负二项分布</a></td><td>方差远大于均值</td><td>每勺幼虫数，每个诱蚊器的成蚊数</td></tr>
+          <tr><td>有一大堆零的计数</td><td><a href="#zeros">零膨胀或栅栏模型</a></td><td>零比负二项分布所允许的还多</td><td>包含干涸或不适宜孳生地的调查</td></tr>
+          <tr><td>正的测量值，右尾长</td><td><a href="#lognormal">对数正态或伽马分布</a></td><td>取对数后看起来对称</td><td>密度、孳生地面积、体型大小</td></tr>
+          <tr><td>事件发生前的时间</td><td><a href="#survival">指数分布、韦布尔分布</a></td><td>每天的风险是否恒定？</td><td>成蚊寿命、发育时间</td></tr>
+          <tr><td>比例及其不确定性</td><td><a href="#beta">贝塔分布</a></td><td>抽样单位相互独立</td><td>阳性孳生地的比例</td></tr>
+          <tr><td>许多数值的平均</td><td><a href="#normal">正态分布</a></td><td>数值足够多，偏态被抹平</td><td>各孳生地的平均密度</td></tr>
+          <tr><td>没有公式的统计量</td><td><a href="#resampling">自助法、置换检验</a></td><td>按抽样的单位重抽样</td><td>排序得分、幼虫覆盖率</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="prose">
+      <h3>本页用到的术语</h3>
+    </div>
+    <dl class="gloss">
+      <dt>均值<span class="en" lang="en">mean</span></dt><dd>所有数值之和除以数值的个数。</dd>
+      <dt>中位数<span class="en" lang="en">median</span></dt><dd>位于中间的值：一半在它之下，一半在它之上。</dd>
+      <dt>方差<span class="en" lang="en">variance</span></dt><dd>各数值到均值的距离平方的平均。它的平方根是标准差。</dd>
+      <dt>标准误<span class="en" lang="en">standard error</span></dt><dd>某个估计值（如均值）在重复调查之间的标准差。</dd>
+      <dt>参数<span class="en" lang="en">parameter</span></dt><dd>决定分布的中心、离散程度或形状的旋钮，例如均值或 <var>k</var>。</dd>
+      <dt>过度离散<span class="en" lang="en">overdispersion</span></dt><dd>离散程度超过泊松分布所允许的范围：方差大于均值。</dd>
+      <dt>聚集参数 <var>k</var><span class="en" lang="en">aggregation parameter</span></dt><dd>负二项分布中控制聚集程度的旋钮。越小越聚集。</dd>
+      <dt>结构性零<span class="en" lang="en">structural zero</span></dt><dd>必然出现的零，因为该孳生地不能养活幼虫。</dd>
+      <dt>分位数<span class="en" lang="en">quantile</span></dt><dd>有给定比例的数据落在它之下的那个值。中位数就是 50% 分位数。</dd>
+      <dt>区间<span class="en" lang="en">interval</span></dt><dd>未知量的一段可信取值范围，对应某个给定的水平，例如 95%。</dd>
+      <dt>P 值<span class="en" lang="en">P value</span></dt><dd>单凭偶然得到至少与观察结果同样极端的结果的频率。</dd>
+    </dl>
+    <div class="prose">
+      <h3>延伸阅读</h3>
+    </div>
+    <ul class="refs" lang="en">
+      <li>Bliss C.I. and Fisher R.A. (1953). Fitting the negative binomial distribution to biological data. <i>Biometrics</i> 9: 176-200.</li>
+      <li>Taylor L.R. (1961). Aggregation, variance and the mean. <i>Nature</i> 189: 732-735.</li>
+      <li>Southwood T.R.E. and Henderson P.A. (2000). <i>Ecological Methods</i>, 3rd edition. Blackwell Science.</li>
+      <li>Service M.W. (1993). <i>Mosquito Ecology: Field Sampling Methods</i>, 2nd edition. Elsevier Applied Science.</li>
+      <li>Bolker B.M. (2008). <i>Ecological Models and Data in R</i>. Princeton University Press.</li>
+      <li>Martin T.G. and others (2005). Zero tolerance ecology: improving ecological inference by modelling the source of zero observations. <i>Ecology Letters</i> 8: 1235-1246.</li>
+      <li>Limpert E., Stahel W.A. and Abbt M. (2001). Log-normal distributions across the sciences: keys and clues. <i>BioScience</i> 51: 341-352.</li>
+      <li>Macdonald G. (1957). <i>The Epidemiology and Control of Malaria</i>. Oxford University Press.</li>
+      <li>Efron B. and Tibshirani R.J. (1993). <i>An Introduction to the Bootstrap</i>. Chapman and Hall.</li>
+    </ul>
+  </section>
+
+  <footer>
+    <p>本页所有数字都是在你的浏览器中模拟生成的，没有任何内容来自真实调查。</p>
+    <p>为幼虫孳生地管理工作制作的学习材料。源代码：<a href="https://github.com/gladcolor/distribution-lab">github.com/gladcolor/distribution-lab</a></p>
+  </footer>
+</main>
+
+<script src="../core.js"></script>
+<script src="../chart.js"></script>
+<script src="../app.js"></script>
+</body>
+</html>
